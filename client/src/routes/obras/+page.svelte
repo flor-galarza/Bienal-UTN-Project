@@ -1,10 +1,10 @@
 <script>
-    import { onMount } from 'svelte';
-    import axios from 'axios';
-    
+    import { onMount } from "svelte";
+    import axios from "axios";
+
     let searchQuery = ""; // Valor de la búsqueda
-    let criterio = 'promedio'; // Criterio de orden por defecto
-    let orden = 'DESC'; // Orden por defecto
+    let criterio = "promedio"; // Criterio de orden por defecto
+    let orden = "DESC"; // Orden por defecto
 
     /**
      * @type {any[]}
@@ -17,18 +17,25 @@
 
     export let mostrandoCarga = false;
 
-    async function fetchObras(query = "", criterio = 'promedio', orden = 'DESC') {
+    async function fetchObras(
+        query = "",
+        criterio = "promedio",
+        orden = "DESC",
+    ) {
         mostrandoCarga = true;
         try {
-            const res = await axios.get(`http://localhost:3001/api/esculturas`, {
-                params: {
-                    search: query,     // Parámetro de búsqueda
-                    sortBy: criterio,  // Criterio de ordenación (nombre, f_creacion, promedio)
-                    order: orden       // Orden (asc o desc)
-                }
-            });
+            const res = await axios.get(
+                `${import.meta.env.VITE_API_URL}/api/esculturas`,
+                {
+                    params: {
+                        search: query, // Parámetro de búsqueda
+                        sortBy: criterio, // Criterio de ordenación (nombre, f_creacion, promedio)
+                        order: orden, // Orden (asc o desc)
+                    },
+                },
+            );
             cards = res.data;
-            console.log(cards)
+            console.log(cards);
             currentPage = 1;
             // Calcula el total de páginas
             totalPages = Math.ceil(cards.length / itemsPerPage);
@@ -51,7 +58,10 @@
     });
 
     // Calcula las cartas a mostrar en la página actual
-    $: displayedCards = cards.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+    $: displayedCards = cards.slice(
+        (currentPage - 1) * itemsPerPage,
+        currentPage * itemsPerPage,
+    );
 
     // Cambia de página
     /**
@@ -70,57 +80,76 @@
 </script>
 
 <div class="main-container" style="background-image: url('psicodelico.jpg');">
+    <div class="search-container">
+        <div>
+            <input
+                type="text"
+                class="search-input"
+                bind:value={searchQuery}
+                placeholder="Buscar obra..."
+            />
+        </div>
+        <div>
+            <!-- Lista desplegable para el criterio de orden -->
+            <select class="search-select" bind:value={criterio}>
+                <option value="promedio">Mejores obras</option>
+                <option value="nombre">Nombre</option>
+                <option value="f_creacion">Fecha de creación</option>
+            </select>
 
-<div class="search-container">
-    <div>
-        <input
-            type="text"
-            class="search-input"
-            bind:value="{searchQuery}"
-            placeholder="Buscar obra..."
-        />
+            <!-- Lista desplegable para el orden ascendente/descendente -->
+            <select class="search-select" bind:value={orden}>
+                <option value="DESC">Descendente</option>
+                <option value="ASC">Ascendente</option>
+            </select>
+            <!-- Lista desplegable para el orden ascendente/descendente -->
+            <select class="search-select" bind:value={orden}>
+                <option value="DESC">Descendente</option>
+                <option value="ASC">Ascendente</option>
+            </select>
+
+            <button
+                class="search-button"
+                on:click={() => fetchObras(searchQuery, criterio, orden)}
+                >Buscar</button
+            >
+        </div>
     </div>
-    <div>
-        <!-- Lista desplegable para el criterio de orden -->
-        <select class="search-select" bind:value="{criterio}">
-            <option value="promedio">Mejores obras</option>
-            <option value="nombre">Nombre</option>
-            <option value="f_creacion">Fecha de creación</option>
-        </select>
-
-        <!-- Lista desplegable para el orden ascendente/descendente -->
-        <select class="search-select" bind:value="{orden}">
-            <option value="DESC">Descendente</option>
-            <option value="ASC">Ascendente</option>
-        </select>
-        <!-- Lista desplegable para el orden ascendente/descendente -->
-        <select class="search-select" bind:value="{orden}">
-            <option value="DESC">Descendente</option>
-            <option value="ASC">Ascendente</option>
-        </select>
-
-        <button class="search-button" on:click="{() => fetchObras(searchQuery, criterio, orden)}">Buscar</button>
-    </div>
-</div>
 
     <!-- Contenedor de las cards -->
-    <div class="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 p-4 auto-rows-auto {animate ? 'animate' : ''}">
+    <div
+        class="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 p-4 auto-rows-auto {animate
+            ? 'animate'
+            : ''}"
+    >
         {#each displayedCards as card}
-            <div class="card block bg-white shadow-secondary-1 m-2.5 border-2 border-gray-300 rounded-md">
+            <div
+                class="card block bg-white shadow-secondary-1 m-2.5 border-2 border-gray-300 rounded-md"
+            >
                 <div class="relative overflow-hidden bg-cover bg-no-repeat">
                     <!-- Contenedor con scroll horizontal para las imágenes -->
-                    <div class="absolute bottom-0 left-0 right-0 top-0 h-full w-full overflow-hidden bg-[hsla(0,0%,98%,0.15)] bg-fixed opacity-0 transition duration-300 ease-in-out hover:opacity-100"></div>
+                    <div
+                        class="absolute bottom-0 left-0 right-0 top-0 h-full w-full overflow-hidden bg-[hsla(0,0%,98%,0.15)] bg-fixed opacity-0 transition duration-300 ease-in-out hover:opacity-100"
+                    ></div>
                 </div>
                 <a href={`/obras/${card.obraPantalla}`}>
                     <div class="scroll-container">
                         {#each card.obraImage as image}
                             <div class="scroll-item">
-                                <img class="scroll-image rounded-t-lg" src={image} alt={card.title} />
+                                <img
+                                    class="scroll-image rounded-t-lg"
+                                    src={image}
+                                    alt={card.title}
+                                />
                             </div>
                         {/each}
                     </div>
                     <div class="p-6 text-surface dark:text-white">
-                        <h5 class="mb-2 text-xl font-medium leading-tight text-black">{card.obraName}</h5>
+                        <h5
+                            class="mb-2 text-xl font-medium leading-tight text-black"
+                        >
+                            {card.obraName}
+                        </h5>
                         <span class="text-cyan-900">
                             <div class="flex items-center space-x-2">
                                 {#each card.obraEscultor.escultoresNombre.slice(0, 4) as nombre, index}
@@ -128,7 +157,8 @@
                                         {#if index === 0}
                                             <!-- Imagen grande con nombre para el primer escultor -->
                                             <img
-                                                src={card.obraEscultor.escultoresFotos[index]}
+                                                src={card.obraEscultor
+                                                    .escultoresFotos[index]}
                                                 class="w-32 h-32 rounded-full object-cover"
                                                 alt="Avatar"
                                             />
@@ -136,7 +166,8 @@
                                         {:else}
                                             <!-- Imágenes pequeñas sin nombre para el resto -->
                                             <img
-                                                src={card.obraEscultor.escultoresFotos[index]}
+                                                src={card.obraEscultor
+                                                    .escultoresFotos[index]}
                                                 class="w-16 h-16 rounded-full object-cover"
                                                 alt="Avatar"
                                             />
@@ -145,16 +176,23 @@
                                 {/each}
                             </div>
                         </span>
-                        <p class="mb-4 text-base text-left text-black">{card.content}</p>
-                        <p class="text-gray-600 text-sm">Fecha de creación: {card.f_creacion}</p>
+                        <p class="mb-4 text-base text-left text-black">
+                            {card.content}
+                        </p>
+                        <p class="text-gray-600 text-sm">
+                            Fecha de creación: {card.f_creacion}
+                        </p>
                         <!-- Aquí se agrega el puntaje con estrellas, incluyendo medias estrellas -->
                         <div class="stars">
                             {#each Array(5) as _, index}
-                                {#if index < Math.floor(card.promedio)} <!-- Estrella completa -->
+                                {#if index < Math.floor(card.promedio)}
+                                    <!-- Estrella completa -->
                                     <span class="star filled">★</span>
-                                {:else if index < card.promedio} <!-- Media estrella -->
+                                {:else if index < card.promedio}
+                                    <!-- Media estrella -->
                                     <span class="star half-filled">★</span>
-                                {:else} <!-- Estrella vacía -->
+                                {:else}
+                                    <!-- Estrella vacía -->
                                     <span class="star">★</span>
                                 {/if}
                             {/each}
@@ -168,7 +206,7 @@
     <!-- Controles de paginación -->
     <div class="pagination">
         {#each Array(totalPages) as _, index}
-            <button class="page-button" on:click="{() => changePage(index + 1)}">
+            <button class="page-button" on:click={() => changePage(index + 1)}>
                 {index + 1}
             </button>
         {/each}
@@ -176,10 +214,9 @@
 
     <!-- Mostrar el ícono de carga solo cuando mostrandoCarga es true -->
     {#if mostrandoCarga}
-    <div class="loading-icon"></div>
+        <div class="loading-icon"></div>
     {/if}
 </div>
-
 
 <!-- Mostrar el ícono de carga solo cuando mostrandoCarga es true -->
 {#if mostrandoCarga}
@@ -187,8 +224,6 @@
 {/if}
 
 <style>
-
-
     .scroll-container {
         display: flex;
         overflow-x: scroll;
@@ -221,97 +256,99 @@
     }
 
     /* Contenedor de la barra de búsqueda */
-.search-container {
-  display: flex;
-  flex-wrap: wrap; /* Permite que los elementos se ajusten a varias líneas */
-  gap: 10px; /* Espaciado entre los elementos */
-  justify-content: center; /* Centra horizontalmente */
-  align-items: center; /* Centra verticalmente */
-  margin-top: 0px;
-  width: 100%; /* Ancho completo */
-}
+    .search-container {
+        display: flex;
+        flex-wrap: wrap; /* Permite que los elementos se ajusten a varias líneas */
+        gap: 10px; /* Espaciado entre los elementos */
+        justify-content: center; /* Centra horizontalmente */
+        align-items: center; /* Centra verticalmente */
+        margin-top: 0px;
+        width: 100%; /* Ancho completo */
+    }
 
-/* Input de búsqueda */
-.search-input {
-  flex: 1; /* Ocupa el espacio disponible */
-  max-width: 600px; /* Ancho máximo */
-  padding: 10px;
-  border: 2px solid #ccc;
-  border-radius: 5px;
-  font-size: 16px;
-  transition: border-color 0.3s;
-}
+    /* Input de búsqueda */
+    .search-input {
+        flex: 1; /* Ocupa el espacio disponible */
+        max-width: 600px; /* Ancho máximo */
+        padding: 10px;
+        border: 2px solid #ccc;
+        border-radius: 5px;
+        font-size: 16px;
+        transition: border-color 0.3s;
+    }
 
-/* Efectos de foco */
-.search-input:focus {
-  border-color: #000000;
-  outline: none;
-}
+    /* Efectos de foco */
+    .search-input:focus {
+        border-color: #000000;
+        outline: none;
+    }
 
-/* Botones de búsqueda */
-.search-button, .search-select {
-  padding: 10px;
-  border-radius: 5px;
-  font-size: 16px;
-  cursor: pointer;
-  transition: background-color 0.3s, border-color 0.3s;
-}
+    /* Botones de búsqueda */
+    .search-button,
+    .search-select {
+        padding: 10px;
+        border-radius: 5px;
+        font-size: 16px;
+        cursor: pointer;
+        transition:
+            background-color 0.3s,
+            border-color 0.3s;
+    }
 
-.search-button {
-  background-color: #000000;
-  color: white;
-  border: none;
-}
+    .search-button {
+        background-color: #000000;
+        color: white;
+        border: none;
+    }
 
-.search-button:hover {
-  background-color: #525252;
-}
+    .search-button:hover {
+        background-color: #525252;
+    }
 
-.search-select {
-  background-color: #f4f4f4;
-  border: 2px solid #ccc;
-}
+    .search-select {
+        background-color: #f4f4f4;
+        border: 2px solid #ccc;
+    }
 
-.search-select:hover,
-.search-select:focus {
-  border-color: #86512c;
-}
+    .search-select:hover,
+    .search-select:focus {
+        border-color: #86512c;
+    }
 
-/* Botones y selects en pantallas pequeñas */
-@media (max-width: 768px) {
-  .search-container {
-    display: flex;
-    justify-content: center; /* Centra los elementos horizontalmente */
-    align-items: center; /* Centra los elementos verticalmente */
-    gap: 10px; /* Espaciado uniforme entre elementos */
-    flex-wrap: wrap; /* Permite que los elementos se ajusten si no hay espacio suficiente */
-    margin-top: 20px; /* Espaciado superior opcional */
-    padding: 10px; /* Añade espacio interior opcional */
-    }   
+    /* Botones y selects en pantallas pequeñas */
+    @media (max-width: 768px) {
+        .search-container {
+            display: flex;
+            justify-content: center; /* Centra los elementos horizontalmente */
+            align-items: center; /* Centra los elementos verticalmente */
+            gap: 10px; /* Espaciado uniforme entre elementos */
+            flex-wrap: wrap; /* Permite que los elementos se ajusten si no hay espacio suficiente */
+            margin-top: 20px; /* Espaciado superior opcional */
+            padding: 10px; /* Añade espacio interior opcional */
+        }
 
-  .search-container > div {
-    display: flex;
-    justify-content: center; /* Centra los elementos dentro de cada div */
-    align-items: center; /* Alinea los elementos verticalmente */
-    flex-wrap: wrap; /* Permite ajustar el contenido interno si es necesario */
-    gap: 10px; /* Espaciado interno entre elementos */
-}
+        .search-container > div {
+            display: flex;
+            justify-content: center; /* Centra los elementos dentro de cada div */
+            align-items: center; /* Alinea los elementos verticalmente */
+            flex-wrap: wrap; /* Permite ajustar el contenido interno si es necesario */
+            gap: 10px; /* Espaciado interno entre elementos */
+        }
 
-
-  .search-input{
-    width: 300px; /* Ocupa todo el ancho del contenedor */
-    font-size: 14px; /* Reduce el tamaño de fuente */
-    flex-wrap: nowrap; /* Evita que los elementos se apilen */
-    padding: 8px; /* Reduce el padding */
-
-  }
-   .search-select, .search-button {
-    flex: 1 0 auto; /* Los elementos mantienen su tamaño ajustado al contenido */
-    max-width: 150px; /* Limita el ancho máximo */
-    font-size: 14px; /* Reduce el tamaño de fuente */
-    padding: 8px; /* Reduce el padding */
-  }
-} 
+        .search-input {
+            width: 300px; /* Ocupa todo el ancho del contenedor */
+            font-size: 14px; /* Reduce el tamaño de fuente */
+            flex-wrap: nowrap; /* Evita que los elementos se apilen */
+            padding: 8px; /* Reduce el padding */
+        }
+        .search-select,
+        .search-button {
+            flex: 1 0 auto; /* Los elementos mantienen su tamaño ajustado al contenido */
+            max-width: 150px; /* Limita el ancho máximo */
+            font-size: 14px; /* Reduce el tamaño de fuente */
+            padding: 8px; /* Reduce el padding */
+        }
+    }
 
     .stars {
         margin-top: 8px; /* Espaciado superior */
@@ -329,7 +366,11 @@
     }
 
     .star.half-filled {
-        background: linear-gradient(90deg, gold 50%, lightgray 50%); /* Gradiente para media estrella */
+        background: linear-gradient(
+            90deg,
+            gold 50%,
+            lightgray 50%
+        ); /* Gradiente para media estrella */
         background-clip: text;
         -webkit-background-clip: text; /* Clip para texto en navegadores WebKit */
         color: transparent; /* Oculta el color base */
@@ -378,7 +419,11 @@
 
     /* Animación de giro */
     @keyframes spin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
+        0% {
+            transform: rotate(0deg);
+        }
+        100% {
+            transform: rotate(360deg);
+        }
     }
 </style>

@@ -1,99 +1,109 @@
 <script>
-    // @ts-nocheck
-    import { onMount } from 'svelte';
-    import { page } from "$app/stores";
-    import axios from 'axios';
-    import CryptoJS from "crypto-js"; // Importar la librería
+  // @ts-nocheck
+  import { onMount } from "svelte";
+  import { page } from "$app/stores";
+  import axios from "axios";
+  import CryptoJS from "crypto-js"; // Importar la librería
 
-    let rating = 0;
-    let userRole;
-    let slug;
-    let obra = {};
-    let animate = false; // Control de animación
-    let mostrandoCarga = true;
-    let email;
-    let recaptchaResponse = "";
+  let rating = 0;
+  let userRole;
+  let slug;
+  let obra = {};
+  let animate = false; // Control de animación
+  let mostrandoCarga = true;
+  let email;
+  let recaptchaResponse = "";
 
-    $: slug = $page.url.searchParams.get('slug');
-    $: [name, code] = slug ? slug.replace(/\/$/, '').split('-') : [null, null];
+  $: slug = $page.url.searchParams.get("slug");
+  $: [name, code] = slug ? slug.replace(/\/$/, "").split("-") : [null, null];
 
-
-    function decodificarToken(token) {
+  function decodificarToken(token) {
     try {
-      const payload = token.split('.')[1];
+      const payload = token.split(".")[1];
       const decoded = atob(payload);
       return JSON.parse(decoded);
     } catch (error) {
-      console.error('Error al decodificar el token:', error);
+      console.error("Error al decodificar el token:", error);
       return null;
     }
   }
-    function obtenerCodigoValido() {
-        // Generar un token único que cambia cada minuto
-        const timestamp = Math.floor(Date.now() / 60000); // Cada minuto cambia
-        // Concatenar con la clave secreta y hashear
-        const hashURL = import.meta.env.VITE_HASH_URLS;
-        // Concatenar con la clave secreta y hashear
-        const hash = CryptoJS.SHA256(`${name}-${timestamp}-${hashURL}`).toString(CryptoJS.enc.Base64);
-        console.log(name)
-        console.log(timestamp)
-        console.log(hashURL)
-        // Tomar los primeros 8 caracteres del hash
-        const hashedSlug = hash.substring(0, 8).replace(/ /g, '+');
-        return hashedSlug;
+  function obtenerCodigoValido() {
+    // Generar un token único que cambia cada minuto
+    const timestamp = Math.floor(Date.now() / 60000); // Cada minuto cambia
+    // Concatenar con la clave secreta y hashear
+    const hashURL = import.meta.env.VITE_HASH_URLS;
+    // Concatenar con la clave secreta y hashear
+    const hash = CryptoJS.SHA256(`${name}-${timestamp}-${hashURL}`).toString(
+      CryptoJS.enc.Base64,
+    );
+    console.log(name);
+    console.log(timestamp);
+    console.log(hashURL);
+    // Tomar los primeros 8 caracteres del hash
+    const hashedSlug = hash.substring(0, 8).replace(/ /g, "+");
+    return hashedSlug;
+  }
+
+  // Función para actualizar el parámetro basado en la calificación
+  /**
+   * @param {number} value
+   */
+  function updateParameter(value) {
+    rating = value; // Actualizamos la calificación
+  }
+
+  async function fetchVotacion(
+    query = name,
+    criterio = "promedio",
+    orden = "DESC",
+  ) {
+    mostrandoCarga = true;
+    try {
+      const res = await axios.get(
+        `${import.meta.env.VITE_API_URL}/api/esculturas`,
+        {
+          params: {
+            search: query, // Parámetro de búsqueda
+            sortBy: criterio, // Criterio de ordenación (nombre, f_creacion, promedio)
+            order: orden, // Orden (asc o desc)
+          },
+        },
+      );
+      obra = res.data[0];
+      const token = localStorage.getItem("token");
+      email = token ? decodificarToken(token).correo : "";
+      // Activa la animación
+      animate = false; // Reinicia la animación
+      // Usa setTimeout para permitir el reflow y luego activar la animación
+      setTimeout(() => {
+        animate = true; // Activa la animación
+      }, 0);
+    } catch (error) {
+      console.log(error);
+    }
+    mostrandoCarga = false;
+  }
+
+  const votar = async (nombre) => {
+    const honeypot = document.querySelector("input[name='honeypot']").value;
+
+    // Si el campo honeypot tiene un valor, se considera que es un bot
+    if (honeypot) {
+      alert("Actividad sospechosa detectada.");
+      return;
     }
 
-    // Función para actualizar el parámetro basado en la calificación
-    /**
-     * @param {number} value
-     */
-    function updateParameter(value) {
-        rating = value; // Actualizamos la calificación
+    if (rating == 0) {
+      alert("Por favor, ingrese un puntaje");
+      return;
     }
 
-    async function fetchVotacion(query = name, criterio = 'promedio', orden = 'DESC') {
-        mostrandoCarga = true;
-        try {
-            const res = await axios.get(`http://localhost:3001/api/esculturas`, {
-                params: {
-                    search: query,     // Parámetro de búsqueda
-                    sortBy: criterio,  // Criterio de ordenación (nombre, f_creacion, promedio)
-                    order: orden       // Orden (asc o desc)
-                }
-            });
-            obra = res.data[0];
-            const token = localStorage.getItem('token');
-            email = token ? decodificarToken(token).correo : '';
-            // Activa la animación
-            animate = false; // Reinicia la animación
-            // Usa setTimeout para permitir el reflow y luego activar la animación
-            setTimeout(() => {
-                animate = true; // Activa la animación
-            }, 0);
-        } catch (error) {
-            console.log(error);
-        }
-        mostrandoCarga = false;
-    }
+    console.log("Mandado:", { rating, nombre, email }); // Para depuración
 
-    const votar = async (nombre) => {
-      const honeypot = document.querySelector("input[name='honeypot']").value;
-
-      // Si el campo honeypot tiene un valor, se considera que es un bot
-      if (honeypot) {
-        alert("Actividad sospechosa detectada.");
-        return;
-      }
-
-      if (rating == 0) {
-        alert("Por favor, ingrese un puntaje");
-        return;
-      }
-
-      console.log("Mandado:", { rating, nombre, email }); // Para depuración
-
-      try {
-        const response = await fetch("http://localhost:3001/api/votacion", {
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_API_URL}/api/votacion`,
+        {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -103,138 +113,142 @@
             nombre,
             email,
           }),
-        });
+        },
+      );
 
-        const data = await response.json();
-        console.log("Respuesta del servidor:", data); // Para depuración
-        if (data.success) {
-          alert(
-            "¡Voto registrado correctamente!\nMuchas gracias por su participación"
-          );
-          goObras();
-        } else if (response.status === 409) {
-          alert(data.message);
-        } else {
-          alert(data.message || "Error al registrar usuario");
-        }
-      } catch (error) {
-        console.error("Error al intentar registrar usuario:", error);
-        alert("Hubo un error al intentar registrar el usuario.");
+      const data = await response.json();
+      console.log("Respuesta del servidor:", data); // Para depuración
+      if (data.success) {
+        alert(
+          "¡Voto registrado correctamente!\nMuchas gracias por su participación",
+        );
+        goObras();
+      } else if (response.status === 409) {
+        alert(data.message);
+      } else {
+        alert(data.message || "Error al registrar usuario");
       }
-    };
-
-    function goObras() {
-      window.location.href = '/obras'; // Redirigir a obras
+    } catch (error) {
+      console.error("Error al intentar registrar usuario:", error);
+      alert("Hubo un error al intentar registrar el usuario.");
     }
+  };
 
-    onMount(() => {
+  function goObras() {
+    window.location.href = "/obras"; // Redirigir a obras
+  }
+
+  onMount(() => {
     // Verifica el rol del usuario
-    userRole = localStorage.getItem('role');
-    if (!userRole || userRole !== 'usuario') {
-        alert('Acceso denegado. Redirigiendo a la página principal.');
-        window.location.href = '/inicio';
+    userRole = localStorage.getItem("role");
+    if (!userRole || userRole !== "usuario") {
+      alert("Acceso denegado. Redirigiendo a la página principal.");
+      window.location.href = "/inicio";
     } else {
-      let codigoValido = obtenerCodigoValido()
+      let codigoValido = obtenerCodigoValido();
       console.log(codigoValido);
-      console.log(code)
-      if (codigoValido.replace(/ /g, '+') != code.replace(/ /g, '+')) {
-          alert('Tiempo de votación fuera de término. Por favor volver a escanear el QR');
-          window.location.href = '/inicio';
+      console.log(code);
+      if (codigoValido.replace(/ /g, "+") != code.replace(/ /g, "+")) {
+        alert(
+          "Tiempo de votación fuera de término. Por favor volver a escanear el QR",
+        );
+        window.location.href = "/inicio";
       } else {
         fetchVotacion();
       }
-    } 
-    });
-
+    }
+  });
 </script>
+
 <!-- Mostrar el ícono de carga solo cuando mostrandoCarga es true -->
 {#if mostrandoCarga}
-    <div class="loading-icon"></div>
+  <div class="loading-icon"></div>
 {/if}
 
 {#if !mostrandoCarga}
-<div class="centered-container">
-  <p class="rating-text">Obra que se votará: {obra.obraName}</p>
-  <div class="contenedor">
-    <div class="galeria">
-      {#each obra.obraImage as imagen}
-        <img src={imagen} alt="Imagen" class="imagen" />
-      {/each}
+  <div class="centered-container">
+    <p class="rating-text">Obra que se votará: {obra.obraName}</p>
+    <div class="contenedor">
+      <div class="galeria">
+        {#each obra.obraImage as imagen}
+          <img src={imagen} alt="Imagen" class="imagen" />
+        {/each}
+      </div>
     </div>
   </div>
-</div>
-<div class="centered-container">
-  <div>
-    {#each Array(5).fill(0) as _, i}
-      <button
-        type="button"
-        class="star {i < rating ? 'selected' : ''}"
-        aria-label="Rate {i + 1} star{(i === 0 ? '' : 's')}"
-        on:click={() => updateParameter(i + 1)}
-        on:keydown={(e) => (e.key === 'Enter' || e.key === ' ') && updateParameter(i + 1)}
-      >
-        ★
-      </button>
-    {/each}
-  </div>
+  <div class="centered-container">
+    <div>
+      {#each Array(5).fill(0) as _, i}
+        <button
+          type="button"
+          class="star {i < rating ? 'selected' : ''}"
+          aria-label="Rate {i + 1} star{i === 0 ? '' : 's'}"
+          on:click={() => updateParameter(i + 1)}
+          on:keydown={(e) =>
+            (e.key === "Enter" || e.key === " ") && updateParameter(i + 1)}
+        >
+          ★
+        </button>
+      {/each}
+    </div>
 
-  <p class="rating-text">Puntaje seleccionado: {rating}</p>
-  <div>
-    <input type="text" name="honeypot" style="display:none" />
-    <button class="button" on:click={votar(obra.obraName)}
-      >Realizar votación</button
-    >
-    <button class="buttonCancelar" on:click={goObras}>Cancelar</button>
+    <p class="rating-text">Puntaje seleccionado: {rating}</p>
+    <div>
+      <input type="text" name="honeypot" style="display:none" />
+      <button class="button" on:click={votar(obra.obraName)}
+        >Realizar votación</button
+      >
+      <button class="buttonCancelar" on:click={goObras}>Cancelar</button>
+    </div>
   </div>
-</div>
 {/if}
 
 <style>
   .buttonCancelar {
-      padding: 12px 24px;
-      background-color: #ae0202; /* Color de fondo verde */
-      border: none;
-      border-radius: 8px; /* Bordes redondeados */
-      color: white;
-      font-size: 16px;
-      font-weight: bold;
-      cursor: pointer;
-      transition: all 0.3s ease; /* Transición suave */
+    padding: 12px 24px;
+    background-color: #ae0202; /* Color de fondo verde */
+    border: none;
+    border-radius: 8px; /* Bordes redondeados */
+    color: white;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease; /* Transición suave */
   }
 
   .buttonCancelar:hover {
-      background-color: #86512c; /* Color más oscuro al pasar el mouse */
-      transform: scale(1.05); /* Escala ligera al pasar el mouse */
+    background-color: #86512c; /* Color más oscuro al pasar el mouse */
+    transform: scale(1.05); /* Escala ligera al pasar el mouse */
   }
 
   .buttonCancelar:active {
-      background-color: #9f6134; /* Color aún más oscuro al hacer clic */
-      transform: scale(0.98); /* Efecto de reducción al hacer clic */
+    background-color: #9f6134; /* Color aún más oscuro al hacer clic */
+    transform: scale(0.98); /* Efecto de reducción al hacer clic */
   }
   .button {
-      padding: 12px 24px;
-      background-color: #0066cc; /* Color de fondo verde */
-      border: none;
-      border-radius: 8px; /* Bordes redondeados */
-      color: white;
-      font-size: 16px;
-      font-weight: bold;
-      cursor: pointer;
-      transition: all 0.3s ease; /* Transición suave */
+    padding: 12px 24px;
+    background-color: #0066cc; /* Color de fondo verde */
+    border: none;
+    border-radius: 8px; /* Bordes redondeados */
+    color: white;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease; /* Transición suave */
   }
 
   .button:hover {
-      background-color: #3e7fc0; /* Color más oscuro al pasar el mouse */
-      transform: scale(1.05); /* Escala ligera al pasar el mouse */
+    background-color: #3e7fc0; /* Color más oscuro al pasar el mouse */
+    transform: scale(1.05); /* Escala ligera al pasar el mouse */
   }
 
   .button:active {
-      background-color: #000000; /* Color aún más oscuro al hacer clic */
-      transform: scale(0.98); /* Efecto de reducción al hacer clic */
+    background-color: #000000; /* Color aún más oscuro al hacer clic */
+    transform: scale(0.98); /* Efecto de reducción al hacer clic */
   }
 
   .button:focus {
-      outline: none; /* Quita el contorno por defecto */
+    outline: none; /* Quita el contorno por defecto */
   }
 
   .contenedor {
@@ -261,7 +275,6 @@
     border-radius: 8px;
   }
 
-
   /* Contenedor principal centrado */
   .centered-container {
     display: flex;
@@ -279,12 +292,16 @@
   }
 
   .star.selected {
-      background: linear-gradient(45deg, rgb(255, 230, 0), rgb(255, 157, 0)); /* Gradient from gold to orange */
-      background-clip: text; /* Standard property */
-      -webkit-background-clip: text; /* Webkit-prefixed for older versions of Chrome and Safari */
-      -moz-background-clip: text; /* Moz-prefixed for compatibility with older Firefox versions */
-      -webkit-text-fill-color: transparent; /* Webkit-prefixed for text fill compatibility */
-      color: transparent; /* Fallback for browsers that don't support text fill or background-clip */
+    background: linear-gradient(
+      45deg,
+      rgb(255, 230, 0),
+      rgb(255, 157, 0)
+    ); /* Gradient from gold to orange */
+    background-clip: text; /* Standard property */
+    -webkit-background-clip: text; /* Webkit-prefixed for older versions of Chrome and Safari */
+    -moz-background-clip: text; /* Moz-prefixed for compatibility with older Firefox versions */
+    -webkit-text-fill-color: transparent; /* Webkit-prefixed for text fill compatibility */
+    color: transparent; /* Fallback for browsers that don't support text fill or background-clip */
   }
 
   .rating-text {
@@ -312,7 +329,11 @@
 
   /* Animación de giro */
   @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
+    0% {
+      transform: rotate(0deg);
+    }
+    100% {
+      transform: rotate(360deg);
+    }
   }
 </style>

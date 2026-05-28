@@ -1,36 +1,64 @@
 <script>
-    import { onMount } from 'svelte';
-    import axios from 'axios';
-    import HoverCard from './shape.svelte';
-    let videoSource = "B24-web-slide-institucional-nuevo-c.mp4";
+  import { onMount } from "svelte";
+  import axios from "axios";
+  import HoverCard from "./shape.svelte";
+  let videoSource = "B24-web-slide-institucional-nuevo-c.mp4";
 
-    /**
-     * @type {any[]}
-     */
-    let cards = [];
+  /**
+   * @type {any[]}
+   */
+  let cards = [];
 
-    async function fetchObras() {
-        try {
-            const res = await axios.get(`http://localhost:3001/api/esculturas`, {
-                params: {
-                    search: "",    
-                    sortBy:  'promedio',  
-                    order: 'DESC'      
-                }
-            });
-            cards = res.data.slice(0,10);
-            console.log(cards)
-        } catch (error) {
-            console.log(error);
-        }
+  async function fetchObras() {
+    try {
+      const res = await axios.get(
+        `${import.meta.env.VITE_API_URL}/api/esculturas`,
+        {
+          params: {
+            search: "",
+            sortBy: "promedio",
+            order: "DESC",
+          },
+        },
+      );
+      cards = res.data.slice(0, 10);
+      console.log(cards);
+    } catch (error) {
+      console.log(error);
     }
+  }
 
-    // Ejecutar la consulta inicial cuando se monta la página
-    onMount(() => {
-        fetchObras(); // Sin query al principio
-    });
-
+  // Ejecutar la consulta inicial cuando se monta la página
+  onMount(() => {
+    fetchObras(); // Sin query al principio
+  });
 </script>
+
+<div class="video-container">
+  <video autoplay muted loop playsinline>
+    <source src={videoSource} type="video/mp4" />
+    Tu navegador no soporta la reproducción de video.
+  </video>
+  <div class="overlay">
+    <!-- Sección de tarjetas con título -->
+    <div class="card-section">
+      <div class="section-title">Obras Destacadas</div>
+      <div class="card-grid">
+        {#each cards as evento}
+          <a href="/obras/{evento.obraPantalla}">
+            <div class="hover-card">
+              <HoverCard
+                imageSrc={evento.obraImage[0]}
+                title={evento.obraName}
+              />
+            </div>
+          </a>
+        {/each}
+      </div>
+    </div>
+    <!-- Espacio para el video y figura -->
+  </div>
+</div>
 
 <style>
   .video-container {
@@ -41,7 +69,9 @@
     overflow: hidden;
     border-radius: 12px;
     box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
-    transition: transform 0.5s ease, box-shadow 0.5s ease;
+    transition:
+      transform 0.5s ease,
+      box-shadow 0.5s ease;
   }
 
   .video-container:hover {
@@ -71,7 +101,7 @@
     justify-content: space-between; /* Asegura que las tarjetas no se solapen con el video */
     align-items: flex-start;
     padding: 1.5rem;
-    font-family: 'Montserrat', sans-serif;
+    font-family: "Montserrat", sans-serif;
   }
 
   .card-section {
@@ -98,7 +128,9 @@
 
   .hover-card {
     max-width: 100%;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    transition:
+      transform 0.3s ease,
+      box-shadow 0.3s ease;
     background: rgba(255, 255, 255, 0.8); /* Fondo semitransparente */
     border-radius: 8px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
@@ -120,26 +152,3 @@
     }
   }
 </style>
-
-<div class="video-container">
-  <video autoplay muted loop playsinline>
-    <source src={videoSource} type="video/mp4" />
-    Tu navegador no soporta la reproducción de video.
-  </video>
-  <div class="overlay">
-    <!-- Sección de tarjetas con título -->
-    <div class="card-section">
-      <div class="section-title">Obras Destacadas</div>
-      <div class="card-grid">
-        {#each cards as evento}
-          <a href="/obras/{evento.obraPantalla}">
-            <div class="hover-card">
-              <HoverCard imageSrc={evento.obraImage[0]} title={evento.obraName} />
-            </div>
-          </a>
-        {/each}
-      </div>
-    </div>
-    <!-- Espacio para el video y figura -->
-  </div>
-</div>

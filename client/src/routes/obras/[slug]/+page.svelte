@@ -25,7 +25,7 @@
   $: slug = $page.params.slug;
 
   let obra = {}; // Objeto vacío para los datos de la obra
-  let obraUrl = `http://localhost:3001/api/obras/${obra.slug}`;
+  let obraUrl = `${import.meta.env.VITE_API_URL}/api/obras/${obra.slug}`;
 
   function decodificarToken(token) {
     try {
@@ -43,11 +43,11 @@
     nombreObra = slug;
     try {
       const response = await axios.get(
-        `http://localhost:3001/api/obras/${slug}`,
+        `${import.meta.env.VITE_API_URL}/api/obras/${slug}`,
         {
           // Cambia la ruta a '/api/obras'
           params: { nombre: slug },
-        }
+        },
       );
       console.log("Datos de la obra recibidos:", response.data); // Verifica los datos que se reciben
       obra = response.data.cardsEscultura;
@@ -77,7 +77,7 @@
     const hashURL = import.meta.env.VITE_HASH_URLS;
     // Concatenar con la clave secreta y hashear
     const hash = CryptoJS.SHA256(
-      `${nombreObra}-${timestamp}-${hashURL}`
+      `${nombreObra}-${timestamp}-${hashURL}`,
     ).toString(CryptoJS.enc.Base64);
     console.log(nombreObra);
     console.log(timestamp);
@@ -85,7 +85,7 @@
     // Tomar los primeros 8 caracteres del hash
     const hashedSlug = hash.substring(0, 8);
 
-    const url = `http://localhost:3333/votacion?slug=${nombreObra}-${hashedSlug}`;
+    const url = `${window.location.origin}/votacion?slug=${nombreObra}-${hashedSlug}`;
 
     // Generar el código QR
     qrCodeUrl = url;
@@ -94,14 +94,14 @@
   }
 
   function generarEnlacesCompartir() {
-    const urlPagina = `http://localhost:3001/api/obras/${slug}`; // Obtiene la URL actual de la página
+    const urlPagina = `${import.meta.env.VITE_API_URL}/api/obras/${slug}`; // Obtiene la URL actual de la página
     const mensaje = "¡Mira esta obra!"; // Mensaje predeterminado para compartir
     return {
       facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(
-        urlPagina
+        urlPagina,
       )}&quote=${encodeURIComponent(mensaje)}`,
       twitter: `https://twitter.com/intent/tweet?url=${encodeURIComponent(urlPagina)}&text=${mensaje}`,
-      whatsapp: `https://wa.me/?text=${encodeURIComponent(mensaje +'\n'+ urlPagina)}`,
+      whatsapp: `https://wa.me/?text=${encodeURIComponent(mensaje + "\n" + urlPagina)}`,
       instagram: `https://www.instagram.com`, // Sin soporte directo
     };
   }
