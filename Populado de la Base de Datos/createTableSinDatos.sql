@@ -1,4 +1,4 @@
-﻿-- Tabla Esculturas
+-- Tabla Esculturas
 CREATE TABLE Esculturas(
 	nombre varchar(100) PRIMARY key,
 	f_creacion date,
@@ -14,7 +14,7 @@ CREATE TABLE Eventos(
 	tematica varchar(100),
 	hora_inicio time,
     hora_fin time,
-    PRIMARY KEY (nombre, lugar)
+    PRIMARY KEY (nombre)
 );
 
 -- Tabla Artistas
