@@ -50,10 +50,10 @@
         },
       );
       console.log("Datos de la obra recibidos:", response.data); // Verifica los datos que se reciben
-      obra = response.data.cardsEscultura;
-      artistas = response.data.cardsArtistas;
-      eventos = response.data.cardsEventos;
-      if (obra.obraEscultor.escultoresNombre.includes(nombreusu)) {
+      obra = response.data.cardsEscultura || {};
+      artistas = response.data.cardsArtistas || [];
+      eventos = response.data.cardsEventos || [];
+      if (obra.obraEscultor && obra.obraEscultor.escultoresNombre && obra.obraEscultor.escultoresNombre.includes(nombreusu)) {
         mostrarQR = true;
         generateQRCode();
         setInterval(generateQRCode, 60000); // 60000 ms = 1 minuto
@@ -223,9 +223,11 @@
 
   <div class="contenedor">
     <div class="galeria">
-      {#each obra.obraImage as imagen}
-        <img src={imagen} alt="Imagen" class="imagen" />
-      {/each}
+      {#if obra.obraImage && obra.obraImage.length > 0}
+        {#each obra.obraImage as imagen}
+          <img src={imagen} alt="Imagen" class="imagen" />
+        {/each}
+      {/if}
     </div>
   </div>
 

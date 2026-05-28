@@ -25,9 +25,12 @@
             data = response.data;
             escultor = data.escultor;
             obras = data.obras;
-
-            nombrepais = whereAlpha2(escultor.nacionalidad);
-            nombrepais = nombrepais.country;
+            if (escultor.nacionalidad) {
+                const alpha2 = whereAlpha2(escultor.nacionalidad);
+                nombrepais = alpha2 ? alpha2.country : 'Desconocida';
+            } else {
+                nombrepais = 'Desconocida';
+            }
         } catch (error) {
             console.log("Error al obtener escultor:", error);
         }

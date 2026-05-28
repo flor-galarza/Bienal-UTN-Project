@@ -444,7 +444,13 @@ const verificarTokenYRol = (rolesPermitidos) => (req, res, next) => {
 app.get('/api/escultores/:nombre', async (req, res) => {
   const nombre = req.params.nombre; // Obtiene el nombre del parámetro de la URL
   const cards = await obtenerArtistas(nombre, 'nombre', 'DESC');; // Función para obtener un escultor específico
-  const cardsObras = await obtenerObrasdeArtista(nombre)
+  
+  if (!cards || cards.length === 0) {
+    return res.status(404).json({ message: 'Escultor no encontrado' });
+  }
+
+  const realArtistName = cards[0].escultorName;
+  const cardsObras = await obtenerObrasdeArtista(realArtistName)
   const respuesta = {
     escultor: cards[0],
     obras: cardsObras
@@ -473,7 +479,14 @@ app.get('/api/esculturas', async (req, res) => {
 app.get('/api/obras/:nombre', async (req, res) => {
   const nombre = req.params.nombre; // Obtiene el nombre del parámetro de la URL
   const cardsEscultura = await obtenerEsculturas(nombre, 'nombre', 'DESC');
-  const cardsArtistasYEventos = await obtenerArtistasyEventosdeObra(nombre);
+  
+  if (!cardsEscultura || cardsEscultura.length === 0) {
+    return res.status(404).json({ message: 'Obra no encontrada' });
+  }
+
+  const realObraName = cardsEscultura[0].obraName;
+  const cardsArtistasYEventos = await obtenerArtistasyEventosdeObra(realObraName);
+  
   const cards = {
     cardsEscultura: cardsEscultura[0],
     cardsArtistas: cardsArtistasYEventos.cardsArtistas, // Artistas únicos
